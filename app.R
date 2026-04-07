@@ -1,4 +1,3 @@
-#https://github.com/gracesteffen38/NeurodiversityToolkit
 library(shiny)
 
 clusters <- list(

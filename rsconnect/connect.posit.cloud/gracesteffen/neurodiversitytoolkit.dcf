@@ -1,0 +1,12 @@
+name: neurodiversitytoolkit
+title: NeurodiversityToolkit
+username: gracesteffen
+account: gracesteffen
+server: connect.posit.cloud
+hostUrl: https://api.connect.posit.cloud/v1
+appId: 019d6583-befd-75b2-030e-2b46a11d8fa1
+bundleId:
+url: https://connect.posit.cloud/gracesteffen/content/019d6583-befd-75b2-030e-2b46a11d8fa1
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
