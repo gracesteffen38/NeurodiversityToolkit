@@ -1,4 +1,7 @@
 library(shiny)
+library(shinyjs)
+
+`%||%` <- function(a, b) if (!is.null(a) && nchar(as.character(a)) > 0) a else b
 
 clusters <- list(
   
@@ -27,7 +30,7 @@ clusters <- list(
         label = "Time blindness",
         strategies = c(
           "Set an alarm called 'LEAVE NOW' — remove the need to calculate anything",
-          "Use a visual timer (like a Time Timer app) so time passing is something you can see, not just a number",
+          "Use a visual timer (like the Time Timer app or <a href='https://visualtimer.com/' target='_blank'>https://visualtimer.com/</a>) so time passing is something you can see, not just a number",
           "Put a clock somewhere you'll actually look — inside the shower, on your bedroom ceiling, on your laptop taskbar",
           "Practice 'time audits': guess how long a task will take, then time it, to build a more accurate internal clock",
           "Create a 'leaving the house' time 15 minutes earlier than you actually need to leave, and treat that as the real deadline",
@@ -260,7 +263,7 @@ clusters <- list(
           "When your plan breaks, don't scrap it — just shift things forward and keep going",
           "Use a weekly review (10 minutes on Sunday) to reset and re-plan for the week ahead",
           "Try a 'top 3 tasks' system: each day, identify only the three most important things",
-          "Use a Gantt chart or project timeline for longer assignments to see the full shape of the work (see templates <a href='https://excel.cloud.microsoft/create/en/gantt-charts/' target='_blank'>here</a>)",
+          "Use a <a href='https://excel.cloud.microsoft/create/en/gantt-charts/' target='_blank'>Gantt chart</a> or project timeline for longer assignments to see the full shape of the work",
           "Try menu planning: give yourself options of different tasks (when you can) and choose which one you feel most capable of doing"
         )
       ),
@@ -281,11 +284,11 @@ clusters <- list(
         plain = "The further away something is, the less real it feels — so it competes poorly with everything that's happening now.",
         label = "Deadline salience",
         strategies = c(
-          "As soon as an assignment is given, figure out when you need to *start*, not just when it's due",
+          "As soon as an assignment is given, figure out when you need to start, not just when it's due",
           "Break projects into milestone deadlines and put those in your calendar, not just the final due date",
           "Use a countdown for major assignments so the shrinking number stays visible",
           "Ask: 'If I were to start this tomorrow, would I have everything I need?' If not, start now",
-          "For long projects, work backward from the due date to create a start date that actually gives you enough time",
+          "For long projects, work backward from the due date to create a start date that actually gives you enough time (<a href='backwards-planning-worksheet.pdf' target='_blank'>see backwards planning worksheet</a>)",
           "Schedule a first-pass session within 48 hours of an assignment being given, even just to read and plan"
         )
       )
@@ -324,7 +327,7 @@ clusters <- list(
         strategies = c(
           "Practice retrieval under mild stress conditions — timed practice tests before the real thing",
           "Before the exam, do a 'brain dump' — write down everything you remember on scratch paper before reading questions",
-          "Use slow breathing (4 counts in, hold 4, out 4) to reduce cortisol before and during the exam",
+          "Use slow breathing (4 counts in, hold 4, out 4) to calm your nervous system before and during the exam (<a href='breathing-exercises.pdf' target='_blank'>see here for more breathing exercises</a>)",
           "Develop a pre-exam routine that signals safety to your nervous system — same music, same snack, same sequence",
           "Practice the 5-4-3-2-1 grounding technique if you feel anxiety spiking during the exam (<a href='Grounding+Exercise+FINAL.pdf' target='_blank'>open 5-4-3-2-1 worksheet</a>)",
           "If you go blank on a question, mark it, move on, and come back — returning with a fresh start often unlocks it"
@@ -619,548 +622,799 @@ clusters <- list(
   )
 )
 
-# CSS
 
-app_css <- "
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: #F7F5F2;
-  color: #1a1a2e;
-  min-height: 100vh;
-}
-
-.app-shell {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 48px 24px 80px;
-}
-
-/* ── Header ── */
-.site-header {
-  margin-bottom: 48px;
-}
-.site-header .eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #6DBFA8;
-  margin-bottom: 10px;
-}
-.site-header h1 {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(32px, 5vw, 48px);
-  color: #1a1a2e;
-  line-height: 1.15;
-  margin-bottom: 12px;
-}
-.site-header .subtitle {
-  font-size: 16px;
-  color: #666;
-  font-weight: 300;
-  max-width: 520px;
-  line-height: 1.6;
-}
-
-/* ── Cluster grid ── */
-.cluster-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-}
-
-.cluster-card {
-  background: #fff;
-  border: 1.5px solid #E8E4DF;
-  border-radius: 14px;
-  padding: 22px 20px 20px;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  text-align: left;
-  width: 100%;
-  display: block;
-  position: relative;
-  overflow: hidden;
-}
-.cluster-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: #6DBFA8;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.2s ease;
-}
-.cluster-card:hover {
-  border-color: #6DBFA8;
-  box-shadow: 0 6px 24px rgba(109,191,168,0.15);
-  transform: translateY(-2px);
-}
-.cluster-card:hover::before { transform: scaleX(1); }
-
-.cluster-card .card-icon {
-  font-size: 28px;
-  margin-bottom: 10px;
-  display: block;
-}
-.cluster-card .card-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin-bottom: 8px;
-}
-.cluster-card .card-previews {
-  font-size: 12.5px;
-  color: #888;
-  line-height: 1.55;
-}
-.card-previews span {
-  display: block;
-}
-.card-previews span::before {
-  content: '\\201C';
-  color: #6DBFA8;
-}
-.card-previews span::after {
-  content: '\\201D';
-  color: #6DBFA8;
-}
-
-/* ── Back button ── */
-.back-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #6DBFA8;
-  font-size: 13.5px;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 500;
-  padding: 0;
-  margin-bottom: 32px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  letter-spacing: 0.01em;
-}
-.back-btn:hover { color: #3B4F6B; }
-
-/* ── Cluster detail ── */
-.cluster-detail-header {
-  margin-bottom: 36px;
-}
-.cluster-detail-header .cluster-icon-lg {
-  font-size: 40px;
-  margin-bottom: 10px;
-  display: block;
-}
-.cluster-detail-header h2 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 30px;
-  color: #1a1a2e;
-  margin-bottom: 6px;
-}
-.cluster-detail-header .section-sub {
-  font-size: 14px;
-  color: #888;
-  font-weight: 300;
-}
-
-/* ── Checkboxes Section ── */
-.statements-section {
-  background: #fff;
-  border: 1.5px solid #E8E4DF;
-  border-radius: 14px;
-  padding: 26px 26px 20px;
-  margin-bottom: 32px;
-}
-.statements-section h3 {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #6DBFA8;
-  margin-bottom: 16px;
-}
-
-/* Overrides Shiny's default 300px max-width on inputs so text spans full width */
-  .statements-section .shiny-input-container {
-    max-width: 100% !important;
-    width: 100% !important;
-  }
-
-/* Fix for Bootstrap's default checkbox wrapping and alignment */
-.checkbox {
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-.checkbox label {
-  display: flex !important;
-  align-items: flex-start;
-  width: 100%;
-  padding-left: 0 !important; 
-  font-size: 15px;
-  color: #333;
-  line-height: 1.45;
-  font-weight: 400;
-  cursor: pointer;
-}
-.checkbox input[type='checkbox'] {
-  position: static !important;
-  margin-left: 0 !important;
-  margin-right: 12px !important;
-  margin-top: 3px !important;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-/* Show All Wrapper & Button */
-.show-all-wrapper {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #E8E4DF;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-}
-.show-all-text {
-  font-size: 13.5px;
-  color: #666;
-  line-height: 1.5;
-}
-.btn-show-all {
-  background-color: transparent;
-  border: 1.5px solid #6DBFA8;
-  color: #6DBFA8;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 13.5px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-.btn-show-all:hover {
-  background-color: #6DBFA8;
-  color: #fff;
-}
-
-/* ── Causes ── */
-.causes-heading {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #3B4F6B;
-  margin-bottom: 16px;
-}
-.causes-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 0;
-}
-.cause-card {
-  background: #fff;
-  border: 1.5px solid #E8E4DF;
-  border-radius: 14px;
-  overflow: hidden;
-}
-.cause-header {
-  padding: 20px 22px 16px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  transition: background 0.15s;
-}
-.cause-header:hover { background: #FAFAF9; }
-.cause-header-left { flex: 1; }
-.cause-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #6DBFA8;
-  margin-bottom: 4px;
-}
-.cause-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin-bottom: 8px;
-}
-.cause-plain {
-  font-size: 13.5px;
-  color: #666;
-  line-height: 1.6;
-  font-weight: 300;
-}
-.cause-toggle {
-  font-size: 20px;
-  color: #6DBFA8;
-  flex-shrink: 0;
-  margin-top: 2px;
-  transition: transform 0.2s;
-  font-weight: 300;
-}
-.cause-toggle.open { transform: rotate(45deg); }
-
-.cause-strategies {
-  display: none;
-  padding: 0 22px 20px;
-  border-top: 1px solid #F0EDE8;
-}
-.cause-strategies.open { display: block; }
-.strategies-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #3B4F6B;
-  margin: 16px 0 12px;
-}
-.strategies-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.strategies-list li {
-  font-size: 13.5px;
-  color: #333;
-  line-height: 1.55;
-  padding: 10px 14px;
-  background: #F7F5F2;
-  border-radius: 8px;
-  position: relative;
-  padding-left: 30px;
-}
-.strategies-list li::before {
-  content: '→';
-  position: absolute;
-  left: 12px;
-  color: #6DBFA8;
-  font-size: 13px;
-}
-
-/* ── Animations ── */
-@keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.anim-in {
-  animation: fadeSlideIn 0.28s ease forwards;
-}
-.cluster-card {
-  animation: fadeSlideIn 0.3s ease forwards;
-}
-
-/* ── Responsive ── */
-@media (max-width: 600px) {
-  .app-shell { padding: 32px 16px 60px; }
-  .cluster-grid { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 400px) {
-  .cluster-grid { grid-template-columns: 1fr; }
-}
-"
-
-# ─────────────────────────────────────────────
-# UI
-# ─────────────────────────────────────────────
 ui <- fluidPage(
+  shinyjs::useShinyjs(),
   tags$head(
-    tags$style(HTML(app_css)),
+    tags$script(src = "https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css"),
     tags$script(HTML("
-      Shiny.addCustomMessageHandler('toggleStrategy', function(id) {
-        var el = document.getElementById('strat_' + id);
-        var toggle = document.getElementById('toggle_' + id);
-        if (el) {
-          el.classList.toggle('open');
-          if (toggle) toggle.classList.toggle('open');
+      Shiny.addCustomMessageHandler('setFontScale', function(msg) {
+        var scaleMap = {
+          '14px': 1,
+          '18px': 1.15,
+          '22px': 1.3
+        };
+        var scale = scaleMap[msg.size] || 1;
+        var app = document.querySelector('.app-shell');
+        if (app) {
+          app.style.zoom = scale;
         }
+      });
+      $(document).on('click','#accessibility-dropdown-btn',function(e){
+        e.preventDefault();e.stopPropagation();$('#accessibility-dropdown-menu').toggle();
+      });
+      $(document).on('click', '#accessibility-dropdown-menu', function(e){
+        e.stopPropagation();
+      });
+      $(document).on('click',function(e){
+        if(!$(e.target).closest('#toolbar-accessibility').length)$('#accessibility-dropdown-menu').hide();
+      });
+
+      // Pill radio styling
+      function updatePills(container){
+        $(container).find('input[type=radio]').each(function(){
+          var wrap=$(this).closest('.radio');
+          if(wrap.length){
+            if(this.checked) wrap.addClass('pill-active');
+            else wrap.removeClass('pill-active');
+          }
+        });
+      }
+      $(document).on('change','.pill-group input[type=radio]',function(){
+        updatePills($(this).closest('.pill-group'));
+      });
+      Shiny.addCustomMessageHandler('initPills',function(x){
+        document.querySelectorAll('.pill-group').forEach(updatePills);
+      });
+
+      // Step checkbox toggle (pure client-side)
+      $(document).on('click','.step-item',function(){
+        $(this).toggleClass('step-done');
+        var total=$('.step-item').length;
+        var done=$('.step-item.step-done').length;
+        var pct=total>0?Math.round(done/total*100):0;
+        $('.chunker-progress-fill').css('width',pct+'%');
+        $('.chunker-progress-count').text(done+' / '+total+' done');
+        if(done===total&&total>0){$('#chunker-celebration').slideDown(200);}
+        else{$('#chunker-celebration').hide();}
+      });
+
+      // Interact.js drag
+      $(document).on('shiny:idle',function(){
+        if(window._interactInit)return;
+        window._interactInit=true;
+        interact('.sticky-note').draggable({
+          listeners:{
+            move:function(e){
+              var t=e.target;
+              var x=(parseFloat(t.getAttribute('data-x'))||0)+e.dx;
+              var y=(parseFloat(t.getAttribute('data-y'))||0)+e.dy;
+              t.style.transform='translate('+x+'px,'+y+'px)';
+              t.setAttribute('data-x',x);t.setAttribute('data-y',y);
+            },
+            end:function(e){
+              var t=e.target;
+              Shiny.setInputValue('matrix_drag_update',{
+                id:t.id,x:parseFloat(t.getAttribute('data-x')),
+                y:parseFloat(t.getAttribute('data-y')),nonce:Math.random()
+              });
+            }
+          }
+        });
       });
     "))
   ),
-
-  div(class = "app-shell",
+  
+  div(class="app-shell",
       
-      # Header
-      div(class = "site-header",
-          div(class = "eyebrow", "Neurodiversity-Inclusive Academic Toolkit"),
-          tags$h1("What's been hard lately?"),
-          div(class = "subtitle",
-              "Find strategies designed for how your brain actually works — not generic advice."
-          )
+      tags$div(id="toolbar-accessibility",
+               actionButton("accessibility-dropdown-btn",
+                            label=tagList(icon("universal-access")," Accessibility"),
+                            class="btn btn-default"),
+               tags$div(id="accessibility-dropdown-menu",class="dropdown-menu",
+                        tags$div(style="margin-bottom:12px;",
+                                 tags$label("Text Size:",style="font-weight:600;display:block;margin-bottom:6px;"),
+                                 selectInput(
+                                   "font_scale",
+                                   label = NULL,
+                                   choices = c("Small", "Medium", "Large"),
+                                   selected = "Small",
+                                   width = "150px"
+                                 )
+                        ),
+                        checkboxInput("high_contrast","High Contrast",FALSE),
+                        checkboxInput("reduce_motion","Reduce Motion",FALSE),
+                        checkboxInput("readable_font","Readable Font",FALSE),
+                        br(),
+                        actionButton("reset_accessibility","Reset Settings",class="btn btn-sm btn-secondary")
+               )
       ),
       
-      # Home grid (shown when no cluster selected)
-      uiOutput("home_ui"),
+      div(class="site-header",div(class="eyebrow","Neurodiversity-Inclusive Academic Toolkit")),
       
-      # Split Cluster UI into Header (Static) and Causes (Dynamic)
-      uiOutput("cluster_header_ui"),
-      uiOutput("cluster_causes_ui")
+      tabsetPanel(id="main_tabs",
+                  tabPanel("🔍 About",
+                           uiOutput("about_ui")
+                  ),
+                  tabPanel("🧠 Toolkit",
+                           div(class="site-header",
+                               tags$h1("What's been hard lately?"),
+                               div(class="subtitle","Find strategies designed for how your brain actually works.")                           ),
+                           uiOutput("home_ui"),
+                           uiOutput("cluster_header_ui"),
+                           uiOutput("cluster_causes_ui")
+                  ),
+                  
+                  
+                  tabPanel("🗂️ Priority Matrix",
+                           div(class="planning-card",
+                               h2(class="planning-title","Priority Matrix"),
+                               p(class="planning-sub","Add tasks and drag them into position by urgency and importance. Select a note, then click 'Break Down Task' to open it in the Task Chunker."),
+                               fluidRow(
+                                 column(8,
+                                        textInput("new_matrix_task",NULL,placeholder="Add a task, e.g. Write lit review"),
+                                        actionButton("add_matrix_task","Add Sticky Note",class="btn-show-all")
+                                 ),
+                                 column(4,br(),
+                                        actionButton("send_to_chunker","\u2192  Break Down Task",class="btn-show-all")
+                                 )
+                               ),
+                               div(class="priority-matrix-wrapper",
+                                   div(class = "priority-matrix", id = "priority_matrix",
+                                       div(class = "matrix-line-vertical"),
+                                       div(class = "matrix-line-horizontal"),
+                                       # Quadrant meaning labels (in addition to axis labels)
+                                       div(class = "quadrant-label q1", "Do First"),       # top-right
+                                       div(class = "quadrant-label q2", "Schedule"),        # top-left
+                                       div(class = "quadrant-label q3", "Delegate"),        # bottom-right
+                                       div(class = "quadrant-label q4", "Let Go"),          # bottom-left
+                                       div(class = "matrix-label label-top", "HIGH IMPORTANCE"),
+                                       div(class = "matrix-label label-bottom", "LOW IMPORTANCE"),
+                                       div(class = "matrix-label label-left", "LOW URGENCY"),
+                                       div(class = "matrix-label label-right", "HIGH URGENCY"),
+                                       uiOutput("sticky_notes_ui"),
+                                       uiOutput("matrix_hint_bar")
+                                   )
+                               )
+                           )
+                  ),
+
+                  tabPanel("🪜 Task Chunker",
+                           uiOutput("chunker_ui")
+                  ),
+                  
+                  tabPanel("📎 Resources",uiOutput("resources_ui"))
+      )
   )
 )
 
-# ─────────────────────────────────────────────
-# SERVER
-# ─────────────────────────────────────────────
+
 server <- function(input, output, session) {
+  generate_local_chunk_plan <- function(task, time_av = "30 min", energy = "Medium", deadline = "Due this week", blocker = "") {
+    
+    task <- trimws(task)
+    blocker <- trimws(blocker)
+    
+    step_count <- switch(
+      energy,
+      "Low" = 3,
+      "Medium" = 4,
+      "High" = 5,
+      4
+    )
+    
+    step_minutes <- switch(
+      time_av,
+      "15 min" = c(3, 4, 5),
+      "30 min" = c(5, 7, 8, 10),
+      "1 hour" = c(8, 10, 12, 15, 15),
+      "2+ hours" = c(10, 15, 20, 20, 25),
+      c(5, 7, 8, 10)
+    )
+    
+    first_step <- switch(
+      energy,
+      "Low" = paste("Open what you need for", task, "and write one messy bullet point."),
+      "Medium" = paste("Set a 5-minute timer and gather the materials for", task, "."),
+      "High" = paste("Open everything for", task, "and sketch a rough plan."),
+      paste("Open what you need for", task, ".")
+    )
+    
+    reframe <- if (nzchar(blocker)) {
+      paste0("It makes sense this feels hard when ", tolower(blocker), ". You only need to do one small step right now.")
+    } else {
+      "You do not need to finish everything right now — you just need a manageable place to begin."
+    }
+    
+    note <- switch(
+      deadline,
+      "Due today" = "Focus on momentum over perfection — done is more useful than perfect.",
+      "Due this week" = "Small progress now will make this feel much lighter later.",
+      "No rush" = "You are allowed to do this slowly and make it easier on yourself.",
+      "Small progress still counts."
+    )
+    
+    step_templates <- list(
+      paste("Open the file, tab, or materials for", task),
+      "Make a rough bullet outline without worrying about quality",
+      "Do the smallest concrete part first",
+      "Pause and decide what the next smallest action is",
+      "Complete one more short, specific section"
+    )
+    
+    tip_templates <- c(
+      "",
+      "Messy is completely okay here.",
+      "",
+      "If you feel stuck, make the step smaller.",
+      ""
+    )
+    
+    steps <- lapply(seq_len(step_count), function(i) {
+      list(
+        action = step_templates[[i]],
+        minutes = step_minutes[[min(i, length(step_minutes))]],
+        tip = tip_templates[[i]]
+      )
+    })
+    
+    # Slightly customize based on task keywords
+    task_lower <- tolower(task)
+    icon <- "📋"
+    
+    if (grepl("essay|paper|write|writing|draft", task_lower)) {
+      icon <- "✍️"
+      steps[[1]]$action <- paste("Open your document for", task)
+      steps[[2]]$action <- "Write a rough outline or list 3 points you want to cover"
+      steps[[3]]$action <- "Draft the easiest sentence or paragraph first"
+    } else if (grepl("study|exam|test|quiz|review", task_lower)) {
+      icon <- "📚"
+      steps[[1]]$action <- paste("Open your notes or study materials for", task)
+      steps[[2]]$action <- "List the top 3 topics you most need to review"
+      steps[[3]]$action <- "Study just one topic using notes, flashcards, or practice questions"
+    } else if (grepl("email|message", task_lower)) {
+      icon <- "📧"
+      steps[[1]]$action <- paste("Open your email draft for", task)
+      steps[[2]]$action <- "Write a very rough version with the main point only"
+      steps[[3]]$action <- "Add greeting, details, and a closing sentence"
+    } else if (grepl("laundry|clean|tidy|room|dishes", task_lower)) {
+      icon <- "🧺"
+      steps[[1]]$action <- paste("Gather what you need to start:", task)
+      steps[[2]]$action <- "Do one clearly defined part first"
+      steps[[3]]$action <- "Set a short timer and keep going until it ends"
+    } else if (grepl("read|chapter|article", task_lower)) {
+      icon <- "📖"
+      steps[[1]]$action <- paste("Open the reading for", task)
+      steps[[2]]$action <- "Skim headings or the first page to get oriented"
+      steps[[3]]$action <- "Read one short section and jot down 1–2 notes"
+    }
+    
+    list(
+      icon = icon,
+      reframe = reframe,
+      first_step = first_step,
+      steps = steps,
+      note = note
+    )
+  }
+  selected_cluster     <- reactiveVal(NULL)
+  show_all_state       <- reactiveVal(FALSE)
+  brain_tasks          <- reactiveVal(NULL)
+  selected_focus_task  <- reactiveVal(NULL)
+  chunker_prefill      <- reactiveVal(NULL)
+  chunker_result       <- reactiveVal(NULL)
+  chunker_loading      <- reactiveVal(FALSE)
+  chunker_error        <- reactiveVal(NULL)
+  chunker_submitted_task <- reactiveVal(NULL)  # store task name at submit time
   
-  selected_cluster <- reactiveVal(NULL)
-  show_all_state <- reactiveVal(FALSE) # Track "Show All" button state
+  matrix_tasks <- reactiveVal(data.frame(
+    id=character(),label=character(),x=numeric(),y=numeric(),stringsAsFactors=FALSE
+  ))
+  
+  observe({
+    toggleClass(selector = "body", class = "high-contrast", condition = isTRUE(input$high_contrast))
+    toggleClass(selector = "body", class = "reduce-motion", condition = isTRUE(input$reduce_motion))
+    toggleClass(selector = "body", class = "readable-font", condition = isTRUE(input$readable_font))
+    
+    font_scale <- input$font_scale %||% "Small"
+    if (length(font_scale) != 1 || !font_scale %in% c("Small", "Medium", "Large")) {
+      font_scale <- "Small"
+    }
+    
+    size <- switch(
+      font_scale,
+      "Small" = "14px",
+      "Medium" = "18px",
+      "Large" = "22px"
+    )
+    
+    session$sendCustomMessage("setFontScale", list(size = size))
+  })
+  
+  observeEvent(input$reset_accessibility,{
+    updateCheckboxInput(session,"high_contrast",value=FALSE)
+    updateCheckboxInput(session,"reduce_motion",value=FALSE)
+    updateCheckboxInput(session,"readable_font",value=FALSE)
+    shinyjs::runjs("
+    var fs = document.getElementById('font_scale');
+    fs.value = 'Small';
+    fs.dispatchEvent(new Event('change', {bubbles: true}));
+  ")
+  })
+  
+  observeEvent(input$selected_cluster,{
+    selected_cluster(input$selected_cluster);show_all_state(FALSE)
+    updateCheckboxGroupInput(session,"selected_statements",selected=character(0))
+  })
+  observeEvent(input$go_home,{selected_cluster(NULL);show_all_state(FALSE)})
+  observeEvent(input$show_all,{show_all_state(TRUE)})
   
   selected_causes <- reactive({
     req(selected_cluster())
     cl <- clusters[[selected_cluster()]]
-    
-    # Show all if button clicked
-    if (show_all_state()) {
-      return(names(cl$causes))
-    }
-    
-    # No selection yet
-    if (is.null(input$selected_statements) || length(input$selected_statements) == 0) {
-      return(NULL)
-    }
-    
-    if (is.null(cl$statement_map)) {
-      return(names(cl$causes))  # fallback
-    }
-    
-    mapped <- cl$statement_map[input$selected_statements]
-    mapped <- mapped[!is.na(mapped)]
-    
-    unique(unlist(mapped))
+    if(show_all_state()) return(names(cl$causes))
+    stmts <- input$selected_statements
+    if(is.null(stmts)||!length(stmts)) return(NULL)
+    mapped <- cl$statement_map[stmts]
+    unique(unlist(mapped[!is.na(mapped)]))
   })
   
-  # ── Homepage grid ──
+  observeEvent(input$add_matrix_task, {
+    req(nchar(trimws(input$new_matrix_task)) > 0)
+    cur <- matrix_tasks()
+    n   <- nrow(cur)
+    # Cycle through quadrants: top-right, top-left, bottom-right, bottom-left
+    quadrant_x <- c(60, 15, 60, 15)
+    quadrant_y <- c(15, 15, 60, 60)
+    q <- (n %% 4) + 1
+    matrix_tasks(rbind(cur, data.frame(
+      id    = paste0("task_", n + 1),
+      label = trimws(input$new_matrix_task),
+      x     = quadrant_x[q] + sample(-8:8, 1),
+      y     = quadrant_y[q] + sample(-8:8, 1),
+      stringsAsFactors = FALSE
+    )))
+    updateTextInput(session, "new_matrix_task", value = "")
+  })
+  
+  observeEvent(input$matrix_drag_update,{
+    upd<-input$matrix_drag_update; t<-matrix_tasks()
+    idx<-which(t$id==upd$id)
+    if(length(idx)>0){
+      t$x[idx]<-t$x[idx]+as.numeric(upd$x)/8
+      t$y[idx]<-t$y[idx]+as.numeric(upd$y)/8
+      matrix_tasks(t)
+    }
+  })
+  
+  observeEvent(input$delete_matrix_task, {
+    cur <- matrix_tasks()
+    matrix_tasks(cur[cur$id != input$delete_matrix_task, ])
+    if (!is.null(input$selected_matrix_task) &&
+        input$selected_matrix_task == cur$label[cur$id == input$delete_matrix_task]) {
+      session$sendCustomMessage("clearSelectedTask", list())
+    }
+  })
+  
+  observeEvent(input$send_to_chunker,{
+    req(input$selected_matrix_task)
+    chunker_prefill(input$selected_matrix_task)
+    chunker_result(NULL); chunker_error(NULL); chunker_loading(FALSE)
+    updateTabsetPanel(session,"main_tabs",selected="🪜 Task Chunker")
+  })
+ 
+  observeEvent(input$chunk_it, {
+    task <- trimws(input$chunker_task_input %||% "")
+    req(nchar(task) > 0)
+    
+    chunker_submitted_task(task)
+    chunker_result(NULL)
+    chunker_error(NULL)
+    chunker_loading(TRUE)
+    
+    time_av  <- input$chunker_time %||% "30 min"
+    energy   <- input$chunker_energy %||% "Medium"
+    deadline <- input$chunker_deadline %||% "Due this week"
+    blocker  <- trimws(input$chunker_blocker %||% "")
+    
+    result <- tryCatch({
+      generate_local_chunk_plan(
+        task = task,
+        time_av = time_av,
+        energy = energy,
+        deadline = deadline,
+        blocker = blocker
+      )
+    }, error = function(e) {
+      list(error = conditionMessage(e))
+    })
+    
+    chunker_loading(FALSE)
+    
+    if (!is.null(result$error)) {
+      chunker_error(paste("Could not generate a plan:", result$error))
+    } else {
+      chunker_result(result)
+    }
+  })
+  
+  observeEvent(input$chunker_reset, {
+    chunker_result(NULL); chunker_error(NULL)
+    chunker_loading(FALSE); chunker_prefill(NULL)
+    chunker_submitted_task(NULL)
+  })
+  observeEvent(input$chunker_retry, {
+    chunker_result(NULL); chunker_error(NULL)
+    shinyjs::delay(50, shinyjs::click("chunk_it"))
+  })
+  
+  output$about_ui <- renderUI({
+    div(
+      div(class="about-card",
+          div(class="about-title","About This Toolkit"),
+          div(class="about-sub",
+              "This toolkit is designed to help students break through overwhelm, understand what might be getting in the way, and find realistic next steps. You do not need to use every feature — you can start anywhere."),
+          div(class="about-note",
+              tags$strong("Good place to start: "),
+              "If you are not sure what you need, begin with the Toolkit tab. If you already know the task you need to do, try Task Chunker. If everything feels jumbled, try the Priority Matrix tab.")
+      ),
+      
+      div(class="about-card",
+          h2(style="font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:16px;","What each tab does"),
+          div(class="about-grid",
+              div(class="about-feature",
+                  span(class="about-feature-icon","🧠"),
+                  h3("Toolkit"),
+                  p("Choose a topic like getting started, being on time, studying, or keeping track. Then select the statements that sound like you to see possible explanations and strategies.")
+              ),
+              div(class="about-feature",
+                  span(class="about-feature-icon","🪜"),
+                  h3("Task Chunker"),
+                  p("Type in one task and the app breaks it into smaller, more doable steps. This is helpful when a task feels too big, vague, or hard to begin.")
+              ),
+              div(class="about-feature",
+                  span(class="about-feature-icon","🗂️"),
+                  h3("Priority Matrix"),
+                  p("Add tasks as sticky notes and place them based on urgency and importance. This helps you see what needs attention now and what can wait.")
+              ),
+              div(class="about-feature",
+                  span(class="about-feature-icon","📎"),
+                  h3("Resources"),
+                  p("Find worksheets and support materials for planning, emotional regulation, and burnout recovery.")
+              )
+          )
+      ),
+      
+      div(class="about-card",
+          h2(style="font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:16px;","How to use it"),
+          tags$ol(class="about-steps",
+                  tags$li("Start with the tool that matches what feels hardest right now."),
+                  tags$li("If you have one task but cannot start, use Task Chunker."),
+                  tags$li("If you have many tasks and do not know what matters most, use Priority Matrix."),
+                  tags$li("If you want strategies for a recurring problem, explore the Toolkit tab."),
+                  tags$li("Use the Accessibility menu in the top-right corner to adjust contrast, motion, font, and text size.")
+          )
+      ),
+      
+      div(class="about-card",
+          h2(style="font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:16px;","A reminder"),
+          div(class="about-note",
+              "This app is meant to support you, not judge you. If something feels difficult, that does not mean you are lazy or failing — it may just mean you need a different structure, a smaller first step, or the right support.")
+      )
+    )
+  })
   output$home_ui <- renderUI({
     req(is.null(selected_cluster()))
-    div(class = "cluster-grid anim-in",
-        lapply(names(clusters), function(name) {
+    div(class="cluster-grid anim-in",
+        lapply(names(clusters),function(name){
           cl <- clusters[[name]]
           tags$button(
-            class = "cluster-card",
-            onclick = sprintf("Shiny.setInputValue('selected_cluster', '%s', {priority: 'event'})", name),
-            tags$span(class = "card-icon", cl$icon),
-            div(class = "card-title", name),
-            div(class = "card-previews",
-                lapply(cl$preview, function(p) tags$span(p))
-            )
+            class="cluster-card",
+            onclick=sprintf("Shiny.setInputValue('selected_cluster','%s',{priority:'event'})",name),
+            tags$span(class="card-icon",cl$icon),
+            div(class="card-title",name),
+            div(class="card-previews",lapply(cl$preview,tags$span))
           )
         })
     )
   })
   
-  # ── Observe cluster selection ──
-  observeEvent(input$selected_cluster, {
-    selected_cluster(input$selected_cluster)
-    show_all_state(FALSE) # Reset state when navigating to a new cluster
-  })
-  
-  # ── Back button ──
-  observeEvent(input$go_home, {
-    selected_cluster(NULL)
-    show_all_state(FALSE) # Reset state
-  })
-  
-  # ── Show All Button ──
-  observeEvent(input$show_all, {
-    show_all_state(TRUE)
-  })
-  
-  # ── Cluster detail page: HEADER (Only redraws when changing cluster category) ──
   output$cluster_header_ui <- renderUI({
     req(!is.null(selected_cluster()))
     cl <- clusters[[selected_cluster()]]
-    
-    div(class = "anim-in",
-        # Back
-        tags$button(
-          class = "back-btn",
-          id = "go_home",
-          onclick = "Shiny.setInputValue('go_home', Math.random())",
-          "← All topics"
-        ),
-        
-        # Header
-        div(class = "cluster-detail-header",
-            tags$span(class = "cluster-icon-lg", cl$icon),
+    div(class="anim-in",
+        tags$button(class="back-btn",id="go_home",
+                    onclick="Shiny.setInputValue('go_home',Math.random())","<- All topics"),
+        div(class="cluster-detail-header",
+            tags$span(class="cluster-icon-lg",cl$icon),
             tags$h2(selected_cluster()),
-            div(class = "section-sub", "Select what resonates, then explore what might help.")
+            div(class="section-sub","Select what resonates, then explore what might help.")
         ),
-        
-        # Statements Checkboxes
-        div(class = "statements-section",
+        div(class="statements-section",
             tags$h3("Do any of these sound like you?"),
-            checkboxGroupInput(
-              inputId = "selected_statements",
-              label = NULL,
-              choices = cl$statements
-            ),
-            
-            # Separated Show All Option
-            div(class = "show-all-wrapper",
-                div(class = "show-all-text", "None of these feel right, I'm not sure, or I want to see all strategies for this problem:"),
-                actionButton("show_all", "Show all strategies", class = "btn-show-all")
+            checkboxGroupInput("selected_statements",NULL,choices=cl$statements),
+            div(class="show-all-wrapper",
+                div(class="show-all-text","None of these feel right, or want to see everything:"),
+                actionButton("show_all","Show all strategies",class="btn-show-all")
             )
         )
     )
   })
   
-  # ── Cluster detail page: CAUSES (Redraws dynamically as checkboxes are clicked) ──
   output$cluster_causes_ui <- renderUI({
     req(!is.null(selected_cluster()))
-    cl <- clusters[[selected_cluster()]]
-    visible_causes <- selected_causes()
-    
-    if (is.null(visible_causes)) {
-      return(
-        div(class = "anim-in", style = "color:#888; font-size:14px; margin-top:10px;",
-            "Select one or more statements above to see strategies tailored to you."
+    cl <- clusters[[selected_cluster()]]; visible <- selected_causes()
+    if(is.null(visible))
+      return(div(class="anim-in",style="color:#888;font-size:14px;margin-top:10px;",
+                 "Select one or more statements above to see strategies tailored to you."))
+    div(class="anim-in",
+        div(class="causes-heading","What might be going on"),
+        div(class="causes-grid",
+            lapply(seq_along(cl$causes),function(i){
+              nm <- names(cl$causes)[i]
+              if(!(nm %in% visible)) return(NULL)
+              cd  <- cl$causes[[i]]
+              uid <- gsub("[^a-zA-Z0-9]","_",paste0(selected_cluster(),"_",i))
+              div(class="cause-card",
+                  div(class="cause-header",
+                      onclick=sprintf("document.getElementById('strat_%s').classList.toggle('open');document.getElementById('toggle_%s').classList.toggle('open');",uid,uid),
+                      div(class="cause-header-left",
+                          div(class="cause-label",cd$label),
+                          div(class="cause-title",nm),
+                          div(class="cause-plain",cd$plain)
+                      ),
+                      div(class="cause-toggle",id=paste0("toggle_",uid),"+")
+                  ),
+                  div(class="cause-strategies",id=paste0("strat_",uid),
+                      div(class="strategies-label","Strategies"),
+                      tags$ul(class="strategies-list",
+                              lapply(cd$strategies,function(x) tags$li(HTML(x))))
+                  )
+              )
+            })
         )
+    )
+  })
+  
+  output$sticky_notes_ui <- renderUI({
+    tasks <- matrix_tasks()
+    if (nrow(tasks) == 0) return(NULL)
+    lapply(seq_len(nrow(tasks)), function(i) {
+      div(class = "sticky-note", id = tasks$id[i],
+          style = paste0("left:", tasks$x[i], "%;top:", tasks$y[i], "%;"),
+          onclick = sprintf(
+            "$('.sticky-note').removeClass('selected');$(this).addClass('selected');
+           Shiny.setInputValue('selected_matrix_task','%s',{priority:'event'});",
+            gsub("'", "\\\\'", tasks$label[i])),
+          tasks$label[i],
+          tags$button(
+            class = "sticky-delete",
+            onclick = sprintf(
+              "event.stopPropagation();Shiny.setInputValue('delete_matrix_task','%s',{priority:'event'});",
+              tasks$id[i]),
+            HTML("&times;")
+          )
       )
-    } 
+    })
+  })
+  
+  output$matrix_hint_bar <- renderUI({
+    task <- input$selected_matrix_task
+    if(is.null(task)||nchar(task)==0) return(NULL)
+    div(class="matrix-hint",
+        tags$strong("Selected: "),task,
+        tags$span(style="color:#888;margin-left:12px;font-size:12px;",
+                  "Click '\u2192 Break Down Task' to build a step plan"))
+  })
+  
+  output$chunker_ui <- renderUI({
     
-    div(class = "anim-in",
-      div(class = "causes-heading", "What might be going on"),
-      div(class = "causes-grid",
-          lapply(seq_along(cl$causes), function(i) {
-            cause_name <- names(cl$causes)[i]
+    if(isTRUE(chunker_loading())) {
+      return(div(class="planning-card",
+                 div(class="chunker-loading",
+                     div(class="chunker-spinner"),
+                     div(class="chunker-loading-text","Building your personalised plan\u2026")
+                 )
+      ))
+    }
+    
+    err <- chunker_error()
+    if(!is.null(err)) {
+      return(div(class="planning-card",
+                 div(class="chunker-error", icon("exclamation-triangle"), " ", err),
+                 br(),
+                 actionButton("chunker_reset","Try a different task",class="btn-ghost")
+      ))
+    }
+    
+    result <- chunker_result()
+    if(!is.null(result)) {
+      return(chunker_results_ui(result, chunker_submitted_task()))
+    }
+    
+    prefill <- chunker_prefill() %||% ""
+    
+    div(class="planning-card anim-in",
+        div(class="planning-title","Task Chunker"),
+        div(class="planning-sub",
+            "Tell me what you need to do and I'll break it into steps sized for where you're at right now."),
+        
+        div(class="chunker-form",
             
-            if (!(cause_name %in% visible_causes)) return(NULL)
-            
-            cause_data <- cl$causes[[i]]
-            uid <- gsub("[^a-zA-Z0-9]", "_", paste0(selected_cluster(), "_", i))
-            
-            div(class = "cause-card",
-                div(class = "cause-header",
-                    onclick = sprintf(
-                      "document.getElementById('strat_%s').classList.toggle('open'); document.getElementById('toggle_%s').classList.toggle('open');",
-                      uid, uid
-                    ),
-                    div(class = "cause-header-left",
-                        div(class = "cause-label", cause_data$label),
-                        div(class = "cause-title", cause_name),
-                        div(class = "cause-plain", cause_data$plain)
-                    ),
-                    div(class = "cause-toggle", id = paste0("toggle_", uid), "+")
-                ),
-                div(class = "cause-strategies", id = paste0("strat_", uid),
-                    div(class = "strategies-label", "Strategies"),
-                    tags$ul(class = "strategies-list",
-                            lapply(cause_data$strategies, function(x) tags$li(HTML(x)))
-                    )
+            div(class="chunker-field",
+                tags$label("What's the task?"),
+                textInput(
+                  "chunker_task_input",
+                  label = NULL,
+                  value = prefill,
+                  placeholder = "e.g. Write the introduction to my essay",
+                  width = "100%"
                 )
+            ),
+            
+            div(class="chunker-field",
+                tags$label(HTML("What's making it hard? <span style='font-weight:300;color:#bbb;text-transform:none;letter-spacing:0'>(optional)</span>")),
+                textAreaInput(
+                  "chunker_blocker",
+                  label = NULL,
+                  value = "",
+                  rows = 2,
+                  width = "100%",
+                  placeholder = "e.g. I don't know where to start, it feels too big, I'm scared of getting it wrong…"
+                )
+            ),
+            
+            div(class="chunker-field",
+                tags$label("How long do you have right now?"),
+                div(class="pill-group",
+                    radioButtons("chunker_time",NULL,inline=TRUE,
+                                 choices=c("15 min","30 min","1 hour","2+ hours"),
+                                 selected="30 min")
+                )
+            ),
+            
+            div(class="chunker-field",
+                tags$label("Energy level right now?"),
+                div(class="pill-group",
+                    radioButtons("chunker_energy",NULL,inline=TRUE,
+                                 choices=c("Low","Medium","High"),
+                                 selected="Medium")
+                )
+            ),
+            
+            div(class="chunker-field",
+                tags$label("How urgent is this?"),
+                div(class="pill-group",
+                    radioButtons("chunker_deadline",NULL,inline=TRUE,
+                                 choices=c("Due today","Due this week","No rush"),
+                                 selected="Due this week")
+                )
+            ),
+            
+            actionButton(
+              "chunk_it",
+              label = "Break it down \u2192",
+              class = "btn-chunker-submit"
             )
-          })
+        )
+    )
+  })
+  
+  # Init pills after render
+  observe({
+    req(is.null(chunker_result()))
+    req(!isTRUE(chunker_loading()))
+    session$sendCustomMessage("initPills", list())
+  })
+  
+  chunker_results_ui <- function(result, task_name) {
+    steps <- result$steps
+    n     <- length(steps)
+    
+    step_items <- lapply(seq_along(steps), function(i) {
+      s   <- steps[[i]]
+      tip <- if(!is.null(s$tip) && nchar(trimws(s$tip))>0)
+        tags$div(class="step-tip", s$tip) else NULL
+      div(class="step-item",
+          div(class="step-checkbox", tags$span(class="step-checkmark","\u2713")),
+          div(class="step-body",
+              div(class="step-action", s$action),
+              div(class="step-meta",
+                  tags$span(class="step-time", paste0("~",s$minutes," min")),
+                  tip)
+          )
+      )
+    })
+    
+    icon_char <- result$icon %||% "📋"
+    
+    div(class="chunker-results",
+        div(class="planning-card",
+            
+            div(class="chunker-task-header",
+                div(class="chunker-task-icon", icon_char),
+                div(
+                  div(class="chunker-task-name", task_name %||% "Your task"),
+                  div(class="chunker-reframe", result$reframe)
+                )
+            ),
+            
+            div(class="chunker-progress-wrap",
+                div(class="chunker-progress-label",
+                    tags$span("Steps completed"),
+                    tags$span(class="chunker-progress-count", paste0("0 / ",n," done"))
+                ),
+                div(class="chunker-progress-track",
+                    div(class="chunker-progress-fill"))
+            ),
+            
+            div(class="first-step-card",
+                tags$span(class="first-step-badge","START HERE"),
+                div(class="first-step-text", result$first_step)
+            ),
+            
+            div(class="step-list", step_items),
+            
+            tags$div(id="chunker-celebration", style="display:none;",
+                     div(class="chunker-done",
+                         tags$span(class="chunker-done-emoji","🎉"),
+                         tags$h3("You did it."),
+                         tags$p("Every step taken is real progress. Take a breath — you earned it.")
+                     )
+            ),
+            
+            div(class="chunker-note",
+                tags$strong("A note: "), result$note),
+            
+            div(class="chunker-actions",
+                actionButton("chunker_reset",  "Try a different task",       class="btn-ghost"),
+                actionButton("chunker_retry",  "Get a different breakdown",  class="btn-ghost")
+            )
+        )
+    )
+  }
+  
+  output$resources_ui <- renderUI({
+    div(
+      div(class="planning-card",h3(style="margin-bottom:16px;","Planning"),
+          tags$ul(class ="planning-list",
+            style="padding-left:20px;line-height:2.2;",
+                  tags$li(tags$a(href="semester-planning.xlsx","Semester Planning Spreadsheet")),
+                  tags$li(tags$a(href="backwards-planning-worksheet.pdf","Backward Planning Worksheet")),
+                  tags$li(tags$a(href="adhd-daily-planner-layout-sampler-pack.pdf","Sample Daily Planners")),
+                  tags$li(tags$a(href="adhd-focus-plan-breaking-down-tasks.pdf","Focus Plan with Task Chunking")),
+                  tags$li(tags$a(href="goal-breakdown.pdf","Goal Breakdown")),
+                  tags$li(tags$a(href="EisenhowerMatrix.pdf","Priority Matrix Handout")),
+                  tags$li(tags$a(href="https://excel.cloud.microsoft/create/en/gantt-charts/", "Gantt Chart Templates"))
+          )
+      ),
+      div(class="planning-card",h3(style="margin-bottom:16px;","Emotional Regulation"),
+          tags$ul(class ="planning-list",
+                  style="padding-left:20px;line-height:2.2;",
+                  tags$li(tags$a(href="Grounding+Exercise+FINAL.pdf","Grounding Exercise (5-4-3-2-1)")),
+                  tags$li(tags$a(href="breathing-exercises.pdf","Breathing Exercises")),
+                  tags$li(tags$a(href="bNeurodiversityHub___Managing+Anxiety_v2.pdf","Managing Anxiety"))
+          )
+      ),
+            div(class="planning-card",h3(style="margin-bottom:16px;","Burnout and Wellness"),
+          tags$ul(class ="planning-list",
+                  style="padding-left:20px;line-height:2.2;",
+                  tags$li(tags$a(href="dopamine-menu.pdf","Dopamine Menu")),
+                  tags$li(tags$a(href="Burnout+and+ADHD.pdf","ADHD and Burnout Handout")),
+                  tags$li(tags$a(href="Self+Care+with+ADHD.pdf","ADHD Self Care Handout")),
+                  tags$li(tags$a(href="reclaimingsolidground_worksheet1.pdf","Burnout Journaling Activity")),
+                  tags$li(tags$a(href="Sensory-Overwhelm.pdf","Sensory Overwhelm Worksheet"))
+          )
+          ),
+          div(class="planning-card",h3(style="margin-bottom:16px;","Academic"),
+              tags$ul(class ="planning-list",
+                      style="padding-left:20px;line-height:2.2;",
+                      tags$li(tags$a(href="Student Email Guide.docx","Templates for Emailing Professors/TAs")),
+                      tags$li(tags$a(href="Studying+with+ADHD.pdf","Tips for Studying with ADHD")),
+                      tags$li(tags$a(href="study-tips.pdf","General Study Tips")),
+                      tags$li(tags$a(href="How-to-Get-ADHD-Accommodations-in-College-1.pdf", "Info on College Accommodations"))
+              )
       )
     )
   })
